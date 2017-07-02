@@ -1,6 +1,6 @@
 Name: dungeont
 Version: 0.1.0.0
-Cabal-Version: >=1.8.0.2
+Cabal-Version: >=1.24
 Build-Type: Simple
 License: MIT
 License-File: LICENSE
@@ -20,9 +20,19 @@ Source-Repository head
     Type: git
     Location: git@github.com:danidiaz/dungeont.git
 
-Library
-    HS-Source-Dirs: lib
-    Build-Depends:
+executable dungeon
+    main-is: Main.hs
+    hs-source-dirs: exe
+    default-language: Haskell2010
+    ghc-options: -Wall -O2 -threaded 
+    build-depends:         
+        base          >= 4        && < 5   ,
+        dungeont
+
+library
+    hs-source-dirs: lib
+    default-language: Haskell2010
+    build-depends:
         base          >= 4        && < 5   ,
         transformers  >= 0.5.3.0           ,
         mtl           >= 2.2.1             ,
@@ -35,7 +45,7 @@ Library
         free          >= 4                 ,         
         void          >= 0.6               ,
         streaming     >= 0.1.4.2
-    Exposed-Modules:
+    exposed-modules:
         Dungeon
         Dungeon.Player
-    GHC-Options: -O2 -Wall
+    ghc-options: -O2 -Wall
