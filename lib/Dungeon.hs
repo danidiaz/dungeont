@@ -2,18 +2,17 @@
 {-# language StandaloneDeriving #-}
 {-# language UndecidableInstances #-}
 {-# language MultiParamTypeClasses #-}
+{-# language FlexibleContexts #-}
 
 module Dungeon (
         Position(..),
         DungeonState(..),
+        MonadDungeon(..),
         DungeonT(..),
-        SimpleDungeonT,
-        ContDungeonT,
-        yieldDungeon
+        ContDungeonT(..),
     ) where
 
 import Control.Monad.State
-import Control.Monad.Trans.Identity
 import Control.Monad.Cont
 import Streaming.Prelude
 
@@ -26,20 +25,26 @@ data DungeonState = Dungeon
        traps :: [Position]
     } deriving (Eq,Show)
                     
-newtype DungeonT t m r = 
-    DungeonT { runDungeonT :: StateT DungeonState (t (Stream (Of DungeonState) m)) r } 
+class MonadState DungeonState m => MonadDungeon m where
+    yieldDungeon :: DungeonState -> m ()
 
-type SimpleDungeonT = DungeonT IdentityT
+newtype DungeonT m r = 
+    DungeonT { runDungeonT :: StateT DungeonState (Stream (Of DungeonState) m) r } 
+    deriving (Functor,Applicative,Monad,MonadState DungeonState)
 
-type ContDungeonT cr = DungeonT (ContT cr)
+instance MonadTrans DungeonT where
+    lift = DungeonT . lift . lift
 
-deriving instance (Monad (t (Stream (Of DungeonState) m))) => Functor (DungeonT t m)
-deriving instance (Monad (t (Stream (Of DungeonState) m))) => Applicative (DungeonT t m)
-deriving instance (Monad (t (Stream (Of DungeonState) m))) => Monad (DungeonT t m)
-deriving instance (Monad (t (Stream (Of DungeonState) m))) => MonadState DungeonState (DungeonT t m)
-deriving instance (MonadCont (t (Stream (Of DungeonState) m))) => MonadCont (DungeonT t m)
+instance Monad m => MonadDungeon (DungeonT m) where
+    yieldDungeon = DungeonT . lift . yield
+            
+newtype ContDungeonT cr m r = 
+    ContDungeonT { runContDungeonT :: StateT DungeonState (ContT cr (Stream (Of DungeonState) m)) r } 
+    deriving (Functor,Applicative,Monad,MonadState DungeonState)
 
-yieldDungeon :: (MonadTrans t,Monad (t (Stream (Of DungeonState) m)),Monad m) => DungeonState -> DungeonT t m ()
-yieldDungeon = DungeonT . lift . lift . yield 
+instance MonadTrans (ContDungeonT cr) where
+    lift = ContDungeonT . lift . lift . lift
 
+instance Monad m => MonadDungeon (ContDungeonT cr m) where
+    yieldDungeon = ContDungeonT . lift . lift . yield
 
