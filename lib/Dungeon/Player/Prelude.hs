@@ -2,6 +2,7 @@
 {-# language MultiWayIf #-}
 
 module Dungeon.Player.Prelude (
+        approach,
         nearestTreasure
     ) where
 
