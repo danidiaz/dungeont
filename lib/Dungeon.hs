@@ -7,10 +7,10 @@
 module Dungeon (
         Position(..),
         DungeonState(..),
-        -- * Dungeon transformer
         MonadDungeon(..),
-        -- * Magic Cont dungeon transformer
+        -- * Dungeon transformer
         DungeonT(..),
+        -- * Magical Cont dungeon transformer
         ContDungeonT(..),
     ) where
 
