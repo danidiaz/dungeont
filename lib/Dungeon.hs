@@ -14,7 +14,7 @@ module Dungeon (
         ContDungeonT(..),
     ) where
 
-import Control.Monad.State
+import Control.Monad.State.Strict
 import Control.Monad.Cont
 import Streaming.Prelude
 
@@ -22,9 +22,9 @@ data Position = Position { xpos :: Int, ypos :: Int } deriving (Eq,Show)
 
 data DungeonState = DungeonState 
     {
-       player :: Position,
-       treasures :: [Position],
-       traps :: [Position]
+       player :: !Position,
+       treasures :: ![Position],
+       traps :: ![Position]
     } deriving (Eq,Show)
                     
 class MonadState DungeonState m => MonadDungeon m where
