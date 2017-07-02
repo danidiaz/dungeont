@@ -7,7 +7,9 @@
 module Dungeon (
         Position(..),
         DungeonState(..),
+        -- * Dungeon transformer
         MonadDungeon(..),
+        -- * Magic Cont dungeon transformer
         DungeonT(..),
         ContDungeonT(..),
     ) where
@@ -40,7 +42,7 @@ instance Monad m => MonadDungeon (DungeonT m) where
             
 newtype ContDungeonT cr m r = 
     ContDungeonT { runContDungeonT :: StateT DungeonState (ContT cr (Stream (Of DungeonState) m)) r } 
-    deriving (Functor,Applicative,Monad,MonadState DungeonState)
+    deriving (Functor,Applicative,Monad,MonadState DungeonState,MonadCont)
 
 instance MonadTrans (ContDungeonT cr) where
     lift = ContDungeonT . lift . lift . lift
