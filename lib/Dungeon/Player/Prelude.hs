@@ -3,7 +3,7 @@
 
 module Dungeon.Player.Prelude (
         approach,
-        nearestTreasure
+        approachTreasure
     ) where
 
 import Data.List
@@ -29,8 +29,8 @@ approach (Position targetx targety) =
                     go
     in go
             
-nearestTreasure :: MonadPlayer m => Int -> m [PlayerResult] 
-nearestTreasure k = do
+approachTreasure :: MonadPlayer m => Int -> m [PlayerResult] 
+approachTreasure k = do
     PlayerView {selfView,treasuresView} <- viewDungeon
     let treasure = sortOn (distance selfView) treasuresView !! k
     approach treasure
