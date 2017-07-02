@@ -48,4 +48,5 @@ library
     exposed-modules:
         Dungeon
         Dungeon.Player
+        Dungeon.Player.Prelude
     ghc-options: -O2 -Wall

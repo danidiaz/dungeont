@@ -5,7 +5,6 @@
 
 module Dungeon.Player (
         PlayerView(..),
-        perceive,
         PlayerAction(..),
         PlayerResult(..),
         MonadPlayer(..)
@@ -47,7 +46,7 @@ data PlayerResult =
     | Death
     deriving (Eq,Show,Enum)
 
-class MonadPlayer m where
+class Monad m => MonadPlayer m where
     viewDungeon :: m PlayerView 
     default viewDungeon :: MonadState DungeonState m => m PlayerView 
     viewDungeon = fmap perceive get
