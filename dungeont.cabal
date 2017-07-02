@@ -24,7 +24,7 @@ Library
     HS-Source-Dirs: lib
     Build-Depends:
         base          >= 4        && < 5   ,
-        transformers  >= 0.5.4.0           ,
+        transformers  >= 0.5.3.0           ,
         mtl           >= 2.2.1             ,
         bifunctors    >= 5                 ,
         profunctors   >= 5                 ,
@@ -37,4 +37,5 @@ Library
         streaming     >= 0.1.4.2
     Exposed-Modules:
         Dungeon
+        Dungeon.Player
     GHC-Options: -O2 -Wall

@@ -20,7 +20,7 @@ import Streaming.Prelude
 
 data Position = Position { xpos :: Int, ypos :: Int } deriving (Eq,Show)
 
-data DungeonState = Dungeon 
+data DungeonState = DungeonState 
     {
        player :: Position,
        treasures :: [Position],
