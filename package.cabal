@@ -39,6 +39,7 @@ executable dungeon
         free          >= 4                 ,         
         void          >= 0.6               ,
         streaming     >= 0.1.4.2           ,
+        vty           >= 5.15              ,
         dungeont
 
 library
