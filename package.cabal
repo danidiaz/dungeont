@@ -40,6 +40,7 @@ executable dungeon
         void          >= 0.6               ,
         streaming     >= 0.1.4.2           ,
         vty           >= 5.15              ,
+        vector        >= 0.12              ,
         dungeont
 
 library

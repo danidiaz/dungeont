@@ -4,9 +4,13 @@
 module Main where
 
 import Data.Monoid
+import Data.Foldable
 import Data.Functor
 import Data.Functor.Identity
+import qualified Data.Vector as V
+import qualified Data.Vector.Mutable as MV
 import Streaming.Prelude
+import Control.Monad.ST
 import Control.Monad.Trans.State.Strict
 
 import Brick
@@ -23,17 +27,28 @@ ui :: Widget ()
 ui = str "Hello, world!"
 
 renderDungeon :: DungeonState -> [[Char]]
-renderDungeon _ = [ "xxxxxxxxxx"
-                  , "yyyyyyyyyy"
-                  , "yyyyyyyyyy"
-                  , "yyyyyyyyyy"
-                  , "yyyyyyyyyy"
-                  , "yyyyyyyyyy"
-                  , "yyyyyyyyyy"
-                  , "yyyyyyyyyy"
-                  , "yyyyyyyyyy"
-                  , "yyyyyyyyyy"
-                  ]
+renderDungeon DungeonState {player,treasures,traps} = runST (do
+    matrix <- V.replicateM 10 (MV.replicate 10 ' ')
+    let drawPos c vec2d Position { xpos, ypos } = do
+            MV.unsafeWrite (V.unsafeIndex vec2d ypos) xpos c
+    drawPos '@' matrix player
+    forM_ treasures $ drawPos '$' matrix
+    forM_ traps $ drawPos 'X' matrix
+    matrix' <- traverse V.unsafeFreeze matrix
+    return $ V.toList . fmap V.toList $ matrix')
+--
+--    return $
+--          [ "xxxxxxxxxx"
+--          , "yyyyyyyyyy"
+--          , "yyyyyyyyyy"
+--          , "yyyyyyyyyy"
+--          , "yyyyyyyyyy"
+--          , "yyyyyyyyyy"
+--          , "yyyyyyyyyy"
+--          , "yyyyyyyyyy"
+--          , "yyyyyyyyyy"
+--          , "yyyyyyyyyy"
+--          ])
 
 data S a m r = S !a !(Stream (Of a) m r)
 
@@ -57,7 +72,7 @@ main = do
         initialDungeon = 
             DungeonState 
             {
-               player = Position 6 5
+               player = Position 6 7
             ,  treasures = [Position 1 2]
             ,  traps = [Position 8 9]
             }
