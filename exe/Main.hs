@@ -22,6 +22,19 @@ import Dungeon.Player.Prelude
 ui :: Widget ()
 ui = str "Hello, world!"
 
+renderDungeon :: DungeonState -> [[Char]]
+renderDungeon _ = [ "xxxxxxxxxx"
+                  , "yyyyyyyyyy"
+                  , "yyyyyyyyyy"
+                  , "yyyyyyyyyy"
+                  , "yyyyyyyyyy"
+                  , "yyyyyyyyyy"
+                  , "yyyyyyyyyy"
+                  , "yyyyyyyyyy"
+                  , "yyyyyyyyyy"
+                  , "yyyyyyyyyy"
+                  ]
+
 data S a m r = S !a !(Stream (Of a) m r)
 
 main :: IO ()
@@ -35,9 +48,7 @@ main = do
     let app :: App (S DungeonState Identity ()) () () =
             App 
             { 
-              appDraw = const $ [ raw $ vertCat $ [ Graphics.Vty.Image.string defAttr "XXXXoXXXX"
-                                                  , Graphics.Vty.Image.string defAttr "skdfjalsd"]
-                                ]         
+              appDraw = \(S dungeon _) -> [raw . vertCat . fmap (Graphics.Vty.Image.string defAttr) $ renderDungeon dungeon]
             , appChooseCursor = Brick.Main.neverShowCursor
             , appHandleEvent = \s _ -> Brick.Main.continue s
             , appStartEvent = return
