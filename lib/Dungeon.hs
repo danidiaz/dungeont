@@ -13,10 +13,12 @@ module Dungeon (
         runDungeonT,
         -- * Magical Cont dungeon transformer
         ContDungeonT,
-        runContDungeonT
+        runContDungeonT,
+        getDungeonCC
     ) where
 
 import Control.Monad.State.Strict
+import Control.Monad.Trans.State.Strict
 import Control.Monad.Cont
 import Streaming.Prelude
 
@@ -52,6 +54,15 @@ newtype ContDungeonT cr m r =
 
 runContDungeonT :: Monad m => ContDungeonT r m r -> DungeonState -> Stream (Of DungeonState) m r
 runContDungeonT d s = flip runContT return . flip evalStateT s . getContDungeonT $ d
+
+-- https://stackoverflow.com/questions/5193876/goto-in-haskell-can-anyone-explain-this-seemingly-insane-effect-of-continuation
+-- "The continuation returned by getCC' has not only ContT's state at the point
+-- of the call, but also the state of any monad above ContT on the stack. When you
+-- restore that state by calling the continuation, all of the monads built above
+-- ContT return to their state at the point of the getCC' call."
+getDungeonCC ::  a -> ContDungeonT cr m (a,a -> ContDungeonT cr m b)
+getDungeonCC x0 = ContDungeonT $
+    liftCallCC callCC (\c -> let f x = c (x, ContDungeonT . f) in return (x0, ContDungeonT . f))
 
 instance MonadTrans (ContDungeonT cr) where
     lift = ContDungeonT . lift . lift . lift

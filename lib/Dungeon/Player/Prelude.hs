@@ -39,26 +39,20 @@ approachTreasure i = do
     let treasure = sortOn (distance selfView) treasuresView !! i
     approach treasure
 
--- https://stackoverflow.com/questions/5193876/goto-in-haskell-can-anyone-explain-this-seemingly-insane-effect-of-continuation
--- "The continuation returned by getCC' has not only ContT's state at the point
--- of the call, but also the state of any monad above ContT on the stack. When you
--- restore that state by calling the continuation, all of the monads built above
--- ContT return to their state at the point of the getCC' call."
-getCC' :: MonadCont m => a -> m (a,a -> m b)
-getCC' x0 = callCC (\c -> let f x = c (x, f) in return (x0, f))
-
 -- | Approach the nearest treasure; if you die, go back in time and try with
 -- another treasure.
 --
--- Currently this gets stuck, because the StateT holding the dungeon state
--- doesn't properly reset.
+-- Previously, I had the problem described here:
 --
 -- https://stackoverflow.com/questions/44988528/statet-over-cont-why-is-my-state-not-being-reset
-approachTreasureCont :: (MonadPlayer m, MonadCont m) => m [PlayerResult] 
+--
+-- I solved it by not relying on the default MonadCont instance, instead using
+-- liftCallCC.
+approachTreasureCont :: (MonadPlayerCont m) => m [PlayerResult] 
 approachTreasureCont = do
     PlayerView {selfView,treasuresView} <- viewDungeon
     let candidates = sortOn (distance selfView) treasuresView
-    (current:rest, retry) <- getCC' candidates
+    (current:rest, retry) <- getPlayerCC candidates
     r <- approach current
     if Death `elem` r
         then retry rest
