@@ -1,5 +1,4 @@
 {-# language NamedFieldPuns #-}
-{-# language MultiWayIf #-}
 
 module Dungeon.Player.Prelude (
         approach
@@ -14,7 +13,8 @@ import Dungeon.Player
 import Control.Monad.Cont
 
 distance :: Position -> Position -> Float
-distance (Position x1 y1) (Position x2 y2) = sqrt . fromIntegral $ (x1-x2)^(2::Int) + (y1-y2)^(2::Int)
+distance (Position x1 y1) (Position x2 y2) = 
+    sqrt . fromIntegral $ (x1-x2)^(2::Int) + (y1-y2)^(2::Int)
 
 approach :: MonadPlayer m => Position -> m [PlayerResult] 
 approach (Position targetx targety) = 
@@ -32,6 +32,7 @@ approach (Position targetx targety) =
                     go
     in go
             
+-- | Approach the ith nearest treasure.
 approachTreasure :: MonadPlayer m => Int -> m [PlayerResult] 
 approachTreasure i = do
     PlayerView {selfView,treasuresView} <- viewDungeon
@@ -46,6 +47,13 @@ approachTreasure i = do
 getCC' :: MonadCont m => a -> m (a,a -> m b)
 getCC' x0 = callCC (\c -> let f x = c (x, f) in return (x0, f))
 
+-- | Approach the nearest treasure; if you die, go back in time and try with
+-- another treasure.
+--
+-- Currently this gets stuck, because the StateT holding the dungeon state
+-- doesn't properly reset.
+--
+-- https://stackoverflow.com/questions/44988528/statet-over-cont-why-is-my-state-not-being-reset
 approachTreasureCont :: (MonadPlayer m, MonadCont m) => m [PlayerResult] 
 approachTreasureCont = do
     PlayerView {selfView,treasuresView} <- viewDungeon

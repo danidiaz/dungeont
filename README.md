@@ -1,6 +1,6 @@
 # dungeont
 
-A dungeon monad transformer
+A dungeon monad transformer.
 
 # running the executable
 

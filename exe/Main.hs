@@ -8,23 +8,29 @@ import Data.Functor
 import Data.Functor.Identity
 import qualified Data.Vector as V
 import qualified Data.Vector.Mutable as MV
-import Streaming.Prelude
+import Streaming.Prelude (next,Stream,Of(..))
 import Control.Monad.ST
-import Control.Monad.Trans.State.Strict
-import Control.Monad.Trans.Cont
 
 import Brick
 import qualified Brick.Main
 
-import Graphics.Vty.Image
+import Graphics.Vty.Image(string,vertCat)
 import Graphics.Vty.Attributes(defAttr)
 import Graphics.Vty.Input.Events
 
 import Dungeon
-import Dungeon.Player.Prelude
+import Dungeon.Player.Prelude (approachTreasure,approachTreasureCont)
 
 import System.Environment
 
+initialDungeonState :: DungeonState
+initialDungeonState =
+    DungeonState 
+    {
+       player = Position 6 7
+    ,  treasures = [Position 1 2]
+    ,  traps = [Position 8 9]
+    }
 
 renderDungeon :: DungeonState -> [[Char]]
 renderDungeon DungeonState {player,treasures,traps} = runST (do
@@ -37,26 +43,26 @@ renderDungeon DungeonState {player,treasures,traps} = runST (do
     matrix' <- traverse V.unsafeFreeze matrix
     return $ V.toList . fmap V.toList $ matrix')
 
+renderDungeonAsWidget :: DungeonState -> Widget n
+renderDungeonAsWidget =
+      raw 
+    . vertCat 
+    . fmap (Graphics.Vty.Image.string defAttr) 
+    . renderDungeon
+
 data S a m r = S !a !(Stream (Of a) m r)
 
 main :: IO ()
 main = do
     mode : _ <- getArgs
-    let initialDungeon = 
-            DungeonState 
-            {
-               player = Position 6 7
-            ,  treasures = [Position 1 2]
-            ,  traps = [Position 8 9]
-            }
-    let progression = void $ case mode of
-            "normal" -> flip evalStateT initialDungeon $ runDungeonT $ approachTreasure 0
-            "magical" -> flip runContT return $ flip evalStateT initialDungeon $ runContDungeonT $ approachTreasureCont
-    -- http://hackage.haskell.org/package/brick-0.19/docs/Brick-Main.html#t:App
-    let app :: App (S DungeonState Identity ()) () () =
+    let progression = void $ (case mode of
+            "normal" -> runDungeonT (approachTreasure 0)
+            "magical" -> runContDungeonT approachTreasureCont) initialDungeonState
+        -- http://hackage.haskell.org/package/brick-0.19/docs/Brick-Main.html#t:App
+        app :: App (S DungeonState Identity ()) () () =
             App 
             { 
-              appDraw = \(S dungeon _) -> [raw . vertCat . fmap (Graphics.Vty.Image.string defAttr) $ renderDungeon dungeon]
+              appDraw = \(S dungeon _) -> [renderDungeonAsWidget dungeon]
             , appChooseCursor = Brick.Main.neverShowCursor
             , appHandleEvent = \s event -> 
                 case event of
@@ -72,5 +78,5 @@ main = do
             , appStartEvent = return
             , appAttrMap = const $ attrMap mempty []
             }
-    _ <- defaultMain app (S initialDungeon progression)
+    _ <- defaultMain app (S initialDungeonState progression)
     return ()
