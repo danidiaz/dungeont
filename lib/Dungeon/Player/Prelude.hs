@@ -49,9 +49,9 @@ getCC' x0 = callCC (\c -> let f x = c (x, f) in return (x0, f))
 approachTreasureCont :: (MonadPlayer m, MonadCont m) => m [PlayerResult] 
 approachTreasureCont = do
     PlayerView {selfView,treasuresView} <- viewDungeon
-    let nearest : farthest: _ = sortOn (distance selfView) treasuresView
-    (target,retryWith) <- getCC' nearest
-    r <- approach target
+    let candidates = sortOn (distance selfView) treasuresView
+    (current:rest, retry) <- getCC' candidates
+    r <- approach current
     if Death `elem` r
-        then retryWith farthest
+        then retry rest
         else return r
