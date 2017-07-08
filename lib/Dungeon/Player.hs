@@ -7,8 +7,7 @@ module Dungeon.Player (
         PlayerView(..),
         PlayerAction(..),
         PlayerResult(..),
-        MonadPlayer(..),
-        MonadPlayerCont(..)
+        MonadPlayer(..)
     ) where
 
 import Control.Monad.State.Strict
@@ -64,13 +63,6 @@ class Monad m => MonadPlayer m where
          get >>= yieldDungeon
          return result
 
-class MonadPlayer m => MonadPlayerCont m where
-    getPlayerCC :: a -> m (a,a -> m b)
-
 instance Monad m => MonadPlayer (DungeonT m)
 
 instance Monad m => MonadPlayer (ContDungeonT cr m)
-
-instance Monad m => MonadPlayerCont (ContDungeonT cr m) where
-    getPlayerCC = getDungeonCC
-

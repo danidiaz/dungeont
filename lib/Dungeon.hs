@@ -13,8 +13,7 @@ module Dungeon (
         runDungeonT,
         -- * Magical Cont dungeon transformer
         ContDungeonT,
-        runContDungeonT,
-        getDungeonCC
+        runContDungeonT
     ) where
 
 import Control.Monad.State.Strict
@@ -50,19 +49,16 @@ instance Monad m => MonadDungeon (DungeonT m) where
             
 newtype ContDungeonT cr m r = 
     ContDungeonT { getContDungeonT :: StateT DungeonState (ContT cr (Stream (Of DungeonState) m)) r } 
-    deriving (Functor,Applicative,Monad,MonadState DungeonState,MonadCont)
+    deriving (Functor,Applicative,Monad,MonadState DungeonState)
 
+-- We cannot rely on the auto-derived MonadCont instance because it doesn't rest state.
+--
+-- https://stackoverflow.com/questions/44988528/statet-over-cont-why-is-my-state-not-being-reset 
+instance MonadCont (ContDungeonT cr m) where 
+    callCC f = ContDungeonT $ Control.Monad.Trans.State.Strict.liftCallCC callCC (\x -> getContDungeonT . f $ ContDungeonT . x)
+    
 runContDungeonT :: Monad m => ContDungeonT r m r -> DungeonState -> Stream (Of DungeonState) m r
 runContDungeonT d s = flip runContT return . flip evalStateT s . getContDungeonT $ d
-
--- https://stackoverflow.com/questions/5193876/goto-in-haskell-can-anyone-explain-this-seemingly-insane-effect-of-continuation
--- "The continuation returned by getCC' has not only ContT's state at the point
--- of the call, but also the state of any monad above ContT on the stack. When you
--- restore that state by calling the continuation, all of the monads built above
--- ContT return to their state at the point of the getCC' call."
-getDungeonCC ::  a -> ContDungeonT cr m (a,a -> ContDungeonT cr m b)
-getDungeonCC x0 = ContDungeonT $
-    liftCallCC callCC (\c -> let f x = c (x, ContDungeonT . f) in return (x0, ContDungeonT . f))
 
 instance MonadTrans (ContDungeonT cr) where
     lift = ContDungeonT . lift . lift . lift
