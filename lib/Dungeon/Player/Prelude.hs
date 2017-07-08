@@ -11,7 +11,7 @@ import Dungeon
 import Dungeon.Player
 
 distance :: Position -> Position -> Float
-distance (Position x1 y1) (Position x2 y2) = sqrt . fromIntegral $ x1*x2 + y1*y2 
+distance (Position x1 y1) (Position x2 y2) = sqrt . fromIntegral $ (x1-x2)^(2::Int) + (y1-y2)^(2::Int)
 
 approach :: MonadPlayer m => Position -> m [PlayerResult] 
 approach (Position targetx targety) = 
